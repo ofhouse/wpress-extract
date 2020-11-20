@@ -1,0 +1,14 @@
+{
+  "name": "wpress-extract",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Felix Haus",
+  "license": "MIT",
+  "dependencies": {
+    "cli-progress": "^3.8.2",
+    "fs-extra": "^9.0.1"
+  }
+}
