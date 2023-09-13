@@ -7,7 +7,7 @@ const cliProgress = require('cli-progress');
 
 const wpExtract = require('./lib/wpress-extract');
 
-async function main({ inputFile, outputDir, override }) {
+async function main({ inputFile, outputDir, override, ignoreWriteErrors }) {
   const progressBar = new cliProgress.SingleBar(
     {
       format: 'Progress: {bar} | {percentage}%',
@@ -29,9 +29,11 @@ async function main({ inputFile, outputDir, override }) {
   };
 
   let totalFiles = 0;
+  let errorFiles = 0;
   let success = false;
-  const onFinish = (_totalFiles) => {
-    totalFiles = _totalFiles;
+  const onFinish = (counts) => {
+    totalFiles = counts.success;
+    errorFiles = counts.error;
     success = true;
     // Set the progress bar to 100% and stop
     progressBar.update(progressBar.getTotal());
@@ -45,6 +47,7 @@ async function main({ inputFile, outputDir, override }) {
       onUpdate,
       onFinish,
       override,
+      ignoreWriteErrors,
     });
   } catch (error) {
     progressBar.stop();
@@ -55,6 +58,11 @@ async function main({ inputFile, outputDir, override }) {
     if (success) {
       console.log();
       console.log(`Successfully extracted ${totalFiles} files.`);
+      if (errorFiles > 0) {
+        console.error(
+          `${errorFiles} files were not extracted because of write error`
+        );
+      }
     }
   }
 }
@@ -75,13 +83,19 @@ yargs(hideBin(process.argv)).command(
       })
       .option('f', {
         alias: 'force',
-        describe: 'override existing directory',
+        describe: 'Override existing directory',
+        type: 'boolean',
+      })
+      .option('iwe', {
+        alias: 'ignore-write-errors',
+        describe: 'Ignore file write errors and continue',
         type: 'boolean',
       });
   },
   (argv) => {
     const override = !!argv.force;
     const inputFile = path.resolve(process.cwd(), argv.input);
+    const ignoreWriteErrors = !!argv.ignoreWriteErrors;
 
     let outputDir =
       typeof argv.out === 'string'
@@ -94,6 +108,6 @@ yargs(hideBin(process.argv)).command(
       outputDir = path.join(process.cwd(), dirName);
     }
 
-    return main({ inputFile, outputDir, override });
+    return main({ inputFile, outputDir, override, ignoreWriteErrors });
   }
 ).argv;
