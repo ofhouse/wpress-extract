@@ -44,6 +44,7 @@ async function main({ inputFile, outputDir, override }) {
       onStart,
       onUpdate,
       onFinish,
+      override,
     });
   } catch (error) {
     progressBar.stop();
